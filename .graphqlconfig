@@ -1,0 +1,4 @@
+{
+  "name": "GraphQL Composers Kata",
+  "schemaPath": "*/**/schema.graphqls"
+}

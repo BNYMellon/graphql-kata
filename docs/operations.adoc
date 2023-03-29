@@ -1,0 +1,109 @@
+////
+  Copyright 2023 The Bank of New York Mellon.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+////
+
+= GraphQL Operations
+1.0, March 29, 2022
+:icons: font
+:toc:
+
+== Defining Operations
+
+The two basic types of operations in GraphQL are queries and mutations.
+Queries are "read" operations and mutations are "write" operations.
+Operations may return non-input types defined in the API schema or any of the default scalar types.
+
+Queries and Mutations are actually special reserved object types within the GraphQL language.
+An API schema will define its operations like fields on either the `Query` type or on the `Mutation` type.
+
+=== Queries
+
+A query operation definition consists of the operation name, the return type, and optionally any parameters required to query the desired data.
+Just like fields, parameters and return types can also include the xref:type_system.adoc#_type_modifiers_and_directives[list or non-null modifiers].
+Nullable parameters may be omitted by the client when performing operations.
+The following snippet defines a query operation that takes a non-null `ID` argument and returns a `Composer`.
+
+[source,graphql]
+----
+type Query {
+    composer(id: ID!): Composer
+}
+----
+
+=== Mutations
+
+Mutations are defined essentially the same way as queries, but using the `Mutation` type.
+The read/write distinction between queries and mutations is semantic and by convention, but they behave in very much the same way.
+Below is a mutation definition that accepts a `ComposerInput` and returns a `Composer`.
+
+[source,graphql]
+----
+type Mutation {
+    createComposer(composer: ComposerInput!): Composer
+}
+----
+
+=== Subscriptions
+
+The final type of operation in GraphQL is a subscription.
+Subscriptions are defined on the `Subscription` type.
+A subscription represents a request for real-time data and is sent to the server in the same way that a query or mutation is.
+The difference is that a subscription receives continuous updates from the server.
+It is usually implemented using either a web socket or long polling under the hood, but client libraries handle this and client side users need not trouble themselves with these implementation details.
+
+// TODO: Need to add Subscriptions to the kata so there is an example to pull from. Subscriptions are still somewhat bleeding edge, so an example can be added after the initial version of this document.
+
+=== Responses and Error Handling
+
+GraphQL servers return data in the form of JSON. The response data is contained in a field called `"data"` on the base JSON object. A GraphQL response containing a `Composer` object might look as follows:
+
+[source,json]
+----
+{
+  "data": {
+    "id": "1",
+    "firstName": "Johann",
+    "lastName": "Bach",
+    "dateOfBirth": "1685-03-30",
+    "period": "BAROQUE"
+  }
+}
+----
+
+GraphQL has first class support for handling errors. Responses have an optional field on the base object `"errors"` that contains error messages and possibly other error-related data. Because GraphQL fetches data lazily, it actually supports partial responses with errors. This can be seen below.
+
+[source,json]
+----
+{
+  "errors": [
+    {
+      "message" : "Could not find location!"
+    }
+  ],
+  "data": {
+    "id": "1",
+    "firstName": "Johann",
+    "lastName": "Bach",
+    "location": null
+  }
+}
+----
+
+|===
+|Previous |Next
+
+|link:./type_system.adoc[Type System]
+|link:./performing_operations.adoc[Performing Operations]
+|===

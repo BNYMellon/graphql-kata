@@ -1,0 +1,164 @@
+////
+  Copyright 2023 The Bank of New York Mellon.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+////
+
+= GraphQL Types
+1.0, March 29, 2022
+:icons: font
+:toc:
+
+== GraphQL Schemas
+
+A schema is a declarative description of the data types and operations that make up an API.
+It functions as a contract for both the client and the server.
+A schema should declare all the data types relevant to the domain and provide a flexible set of operations for retrieving, creating, and manipulating the data.
+
+== Defining Types
+
+The GraphQL type system is made up of objects with fields.
+Fields can be scalars, objects, or lists of scalars or objects.
+As we will see later, even the `Query`, `Mutation`, and `Subscription` operation types which form the entry points to an API are essentially just objects with fields.
+
+=== Scalars
+
+Scalars are the basic units of concrete data in GraphQL.
+The default scalars are: `Int`, `Float`, `String`, `Boolean`, and `ID`.
+
+NOTE: APIs have the ability to define custom scalar types.
+The `ID` type is virtually a string, but allows the server to define custom formatting requirements or dictate how IDs are handled.
+This is similar to how user-defined custom scalars work.
+They will be represented by a number or string type, but with custom rules implemented on the server side.
+
+Object and scalar types are defined in the API schema.
+A custom scalar `Date` is defined below.
+The raw data of a `Date` will be represented as a string but the server may enforce a specific format, such as ISO 8601, or some other standard date format.
+
+[source,graphql]
+----
+scalar Date
+----
+
+=== Enums
+
+In GraphQL, enums are also a special type of scalar with a restricted set of values.
+Below is an enum that defines several historical musical periods.
+
+[source,graphql]
+----
+enum Period {
+    RENAISSANCE
+    BAROQUE
+    CLASSICAL
+    ROMANTIC
+    MODERN
+    POST_MODERN
+}
+----
+
+=== Objects
+
+`Composer` and `Composition` types are defined as examples of objects below.
+Notice that the `Composer` type is made up of scalar fields (including the custom `Date` scalar) and one field (`compositions`) which is a list of another object type.
+
+[source,graphql]
+----
+type Composer {
+    id: ID!
+    firstName: String
+    lastName: String
+    dateOfBirth: Date # custom scalar type
+    period: Period # enum
+    compositions: [Composition] # list of objects
+}
+
+type Composition {
+    title: String
+}
+----
+
+== Advanced Type Features
+
+=== Type Modifiers and Directives
+
+There are two type modifiers and three directives built into GraphQL. The two type modifiers are non-null, `!` and the list `[]` modifier which we have already seen.
+We will discuss other directives later, but the only directive relevant to defining data on the schema is `@deprecated`. This directive can mark fields as deprecated and optionally provide reasoning. `@deprecated` can also be used on operations as well as data fields.
+
+=== Interfaces and Unions
+
+Interfaces are abstract types that allow concrete types to share data fields.
+This reduces duplication both in the type definitions and in the API operation definitions.
+Unions represent data that may be of several types, allowing for consolidation of API operation definitions for types that do not share common fields.
+
+Next, another custom scalar for `Key` is defined and the last `Composition` type is amended to be an interface with several concrete types.
+
+[source,graphql]
+----
+scalar Key
+
+interface Composition {
+    title: String
+    key: Key!
+}
+
+type Piece implements Composition {
+    title: String
+    key: Key!
+}
+
+type Concerto implements Composition {
+    title: String
+    key: Key!
+    soloInstrument: Instrument!
+}
+
+type Song implements Composition {
+    title: String
+    key: Key!
+    lyrics: String!
+}
+----
+
+TIP: In GraphQL, objects have an implicit field `__typename`.
+This field is object metadata that contains the name of the concrete type being returned and is often used when querying interface or union types.
+
+=== Input Types
+
+The final special type to cover is input types.
+Input types are very much like regular object types, but they are used as parameters for GraphQL operations.
+
+Operations will be covered next, but for now it is sufficient to understand that regular types and input types are mutually exclusive.
+A regular type cannot be used as a parameter for an operation and an input type cannot be used as a return type.
+
+Unfortunately at the moment input types cannot be included in unions and cannot implement interfaces.
+Input types can also only be composed of scalars or other input types and cannot include any regular, interface, or union typed fields.
+Below is an example of an input type definition.
+
+[source,graphql]
+----
+input CompositionInput {
+    subtype: String!
+    title: String
+    key: Key!
+    soloInstrument: InstrumentInput
+    lyrics: String
+}
+----
+
+|===
+|Previous |Next
+
+|link:./graphql.adoc[What is GraphQL?]
+|link:./operations.adoc[GraphQL Operations]
+|===

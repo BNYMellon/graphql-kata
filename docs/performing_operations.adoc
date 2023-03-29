@@ -1,0 +1,297 @@
+////
+  Copyright 2023 The Bank of New York Mellon.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+////
+
+= Calling the API
+1.0, March 29, 2022
+:icons: font
+:toc:
+
+== Performing Operations
+
+Once an API schema has been established and implemented, a client can begin performing operations against the API.
+
+=== Basic Requests
+
+A simple query against a GraphQL API might look like this:
+
+[source,graphql]
+----
+query {
+    composer(id: "1") {
+        firstName
+        lastName
+    }
+}
+----
+
+The server would return JSON formatted data like so:
+
+[source,json]
+----
+{
+  "data": {
+    "composer": {
+      "firstName": "Johann",
+      "lastName": "Bach"
+    }
+  }
+}
+----
+
+One of the defining features of GraphQL is that data is retrieved lazily and the client actually has some amount of control over the structure and content of the data returned.
+In the query just given, the client could choose to include whatever fields of the return type it deems necessary.
+When a desired field is another object type, the client may also choose which fields of the nested object are included in the response, ad infinitum.
+With a single operation definition in a schema, a client is able to make a myriad of different requests.
+For example, see this request and response using the same operation defined previously.
+
+.Request
+[source,graphql]
+----
+query {
+    composer(id: "1") {
+        lastName
+        compositions {
+            title
+        }
+    }
+}
+----
+
+.Response
+[source,json]
+----
+{
+  "data": {
+    "composer": {
+      "lastName": "Bach",
+      "compositions": [
+        {
+          "title": "Toccata and Fugue in D minor"
+        },
+        {
+          "title": "Mass in B minor"
+        },
+        {
+          "title": "Cello Suite No. 1"
+        }
+      ]
+    }
+  }
+}
+----
+
+The previous queries are anonymous, but in GraphQL operations can be named to reveal intent.
+The last query shown above could be defined as a named query, as shown below, and the response from the server would look identical.
+
+[source,graphql]
+----
+query ComposerById {
+    composer(id: "1") {
+        lastName
+        compositions {
+            title
+        }
+    }
+}
+----
+
+=== Using Parameters and Variables
+
+Another change we could make to this last query to improve its reusability is to make the query parameter into an operation variable.
+Variable definitions include the name of the variable, prefixed by `$`, and the variable's type.
+The defined variable can then be used in the operation call.
+The value of a variable will be sent along with the request as a separate JSON object and injected into the operation.
+
+.Query
+[source,graphql]
+----
+query ComposerById($id: ID!) {
+    composer(id: $id) {
+        firstName
+        lastName
+    }
+}
+----
+
+.Variables
+[source,json]
+----
+{
+  "id": "1"
+}
+----
+
+Inline parameters and operation variables can also both be leveraged on object fields to make queries more dynamic and flexible.
+The following query would first find a `Composer` by `ID` and then find compositions belonging to the composer by `Key`.
+
+.Request
+[source,graphql]
+----
+query ComposerCompositionsByKey($id: ID!, $key: Key) {
+    composer(id: $id) {
+        firstName
+        lastName
+        compositions(key: $key){
+            title
+        }
+    }
+}
+----
+
+.Variables
+[source,json]
+----
+{
+  "id": "1",
+  "key": "Dm"
+}
+----
+
+=== Using Aliases and Fragments
+
+Fields in queries can also be aliased, allowing the same field to be queried multiple times using different parameters in a single request.
+The following query would return composers of two different periods in the same response.
+
+[source,graphql]
+----
+query RenaissanceAndBaroqueComposers {
+    renaissanceComposers: composers(period: RENAISSANCE) {
+        firstName
+        lastName
+    }
+    baroqueComposers: composers(period: BAROQUE) {
+        firstName
+        lastName
+    }
+}
+----
+
+To eliminate the duplication found in this query, GraphQL provides the ability to define fragments in a query that can be reused across objects of the same type or objects which implement the same interface.
+Once again, inline parameters and operation variables can both be used inside of fragments to provide more flexibility.
+In the following example, the previous query has be revised to use a fragment and to include an optional `$subtype` variable which would filter the type of `Composition` returned.
+
+.Request
+[source,graphql]
+----
+query RenaissanceAndBaroqueCompositions($subtype: String) {
+    renaissanceComposers: composers(period: RENAISSANCE) {
+        ...composerFields
+    }
+    baroqueComposers: composers(period: BAROQUE) {
+        ...composerFields
+    }
+}
+
+fragment composerFields on Composer {
+    firstName
+    lastName
+    compositions(subtype: $subtype) {
+        title
+    }
+}
+----
+
+.Variables
+[source,json]
+----
+{
+  "subtype": "Song"
+}
+----
+
+=== Requesting Interface and Union Types
+
+Inline fragments enable a client to specify different fields on different concrete types of an interface or union type.
+The next query would return different fields for different concrete `Composition` types belonging to a `Composer`.
+The `__typename` field is also used to retrieve the concrete type information.
+
+[source,graphql]
+----
+query GetComposerCompositions($id: ID!) {
+    composer(id: $id) {
+        firstName
+        lastName
+        compositions {
+            __typename
+            title
+            ... on Concerto {
+                soloInstrument {
+                    name
+                }
+            }
+            ... on Song {
+                lyrics
+            }
+        }
+    }
+}
+----
+
+A response to this request might look like the following.
+
+[source,json]
+----
+{
+  "data": {
+    "composer": {
+      "firstName": "Wolfgang",
+      "lastName": "Mozart",
+      "compositions": [
+        {
+          "__typename": "Piece",
+          "title": "Eine kleine Nachtmusik"
+        },
+        {
+          "__typename": "Piece",
+          "title": "Requiem"
+        },
+        {
+          "__typename": "Concerto",
+          "title": "Clarinet Concerto in A Major",
+          "soloInstrument": {
+            "name": "Clarinet"
+          }
+        }
+      ]
+    }
+  }
+}
+----
+
+=== Default Variables and Directives
+
+The last features of requests covered here are directives and default variables.
+The following query uses the `@include` directive to dynamically include or exclude the `dateOfBirth` field depending on the value of the `$withBirthday` variable. `$withBirthday` is a default variable that will be `false` by default if not specified by the client.
+GraphQL currently has only three directives: `@include` and `@skipIf`, which are the boolean inverse of each other and `@deprecated` which we saw earlier.
+Experimentally, custom directives can be defined by a server, but this is advanced non-standard usage of GraphQL.
+
+[source,graphql]
+----
+query GetComposer($id: ID!, $withBirthday: Boolean = false){
+    composer(id: $id){
+        firstName
+        lastName
+        dateOfBirth @include(if: $withBirthday)
+    }
+}
+----
+
+|===
+|Previous |Next
+
+|link:./operations.adoc[GraphQL Operations]
+|link:./tooling.adoc[GraphQL Tools]
+|===

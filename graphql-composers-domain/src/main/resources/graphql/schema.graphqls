@@ -1,0 +1,129 @@
+# Copyright 2023 The Bank of New York Mellon.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+schema {
+    query: Query
+    mutation: Mutation
+}
+
+# Collection of Query operations
+type Query {
+    # Search for a composer by ID.
+    composer(id: ID!): Composer
+    # Filter a list of composers by any combination of the available arguments
+    composers(period: Period, country: String, city: String, instrument: String, lastName: String): [Composer]
+}
+
+# Collection of Mutation operations
+type Mutation {
+    # Add a new composer to the list of composers.
+    createComposer(composer: ComposerInput!): Composer
+    # Update fields on an existing composer.
+    updateComposer(id: ID! composer: ComposerInput): Composer
+    # Add a new composition to an existing composer's list of compositions.
+    addCompositions(composerId: ID! compositions: [CompositionInput]): [Composition]
+    # Remove a composition from an existing composer's list of compositions.
+    deleteComposition(composerId: ID! title: String!): Boolean
+}
+
+type Composer {
+    id: ID!
+    firstName: String
+    lastName: String
+    dateOfBirth: Date
+    location: Location
+    period: Period
+    primaryInstrument: Instrument
+    compositions(key: Key, subtype: String): [Composition]
+}
+
+type Location {
+    city: String
+    country: String
+}
+
+type Instrument {
+    name: String
+    type: InstrumentType!
+}
+
+scalar Key
+scalar Date
+
+interface Composition {
+    title: String
+    key: Key!
+}
+
+type Piece implements Composition {
+    title: String
+    key: Key!
+}
+
+type Concerto implements Composition{
+    title: String
+    key: Key!
+    soloInstrument: Instrument!
+}
+
+type Song implements Composition{
+    title: String
+    key: Key!
+    lyrics: String!
+}
+
+input ComposerInput {
+    firstName: String
+    lastName: String!
+    dateOfBirth: Date
+    location: LocationInput
+    primaryInstrument: InstrumentInput
+    period: Period
+}
+
+input LocationInput {
+    city: String
+    country: String
+}
+
+input InstrumentInput {
+    name: String
+    type: InstrumentType!
+}
+
+input CompositionInput{
+    subtype: String!
+    title: String
+    key: Key!
+    soloInstrument: InstrumentInput
+    lyrics: String
+}
+
+enum Period {
+    RENAISSANCE
+    BAROQUE
+    CLASSICAL
+    ROMANTIC
+    MODERN
+    POST_MODERN
+}
+
+enum InstrumentType {
+    STRING
+    KEYBOARD
+    WOODWIND
+    BRASS
+    PERCUSSION
+    VOICE
+}
