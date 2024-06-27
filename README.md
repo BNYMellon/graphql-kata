@@ -48,7 +48,7 @@ The kata is divided into a `query` package and a `mutation` package, the main tw
 GraphQL queries are read-only operations sent by a client to retrieve data from a GraphQL server. Queries allow clients
 to request, aggregate, and filter server-side data and receive a JSON formatted response.
 
-The package `bnymellon.jpe.graphql.kata.query` in the `src/test` directory contains a series of failing query related
+The package `bny.jpe.graphql.kata.query` in the `src/test` directory contains a series of failing query related
 unit tests designed to teach the basics of making GraphQL queries. The `src/test/resources/queries` directory contains
 several `*.graphql` files which need to be modified in order to make the tests pass. The schema for the query tests can
 be found in `graphql-composers-domain/src/main/resources/schema.graphqls`.
@@ -60,7 +60,7 @@ Mutations allow clients to perform these operations against the server and recei
 in the same way they would from a query operation. Once you are familiar with making queries you are well on your way to
 understanding mutations and many of the same concepts and features still apply.
 
-In the `src/test` directory there is a `bnymellon.jpe.graphql.kata.mutation` package which contains failing unit tests
+In the `src/test` directory there is a `bny.jpe.graphql.kata.mutation` package which contains failing unit tests
 designed to teach the basics of performing GraphQL mutations. The `src/test/resources/mutation` directory contains
 several `*.graphql` files which need to be modified in order to make the tests pass. The schema for the mutation tests
 is the same as for the query tests and can be found in `graphql-composers-domain/src/main/resources/schema.graphqls`.
