@@ -1,0 +1,29 @@
+name: Maven Package
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Git Checkout
+      uses: actions/checkout@v3
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Maven Verify
+      run: mvn verify -DskipTests=true -Dmaven.javadoc.skip=true -B -V --no-transfer-progress
+    - name: Maven run Tests
+      run: mvn package -B -pl !graphql-kata-exercises
