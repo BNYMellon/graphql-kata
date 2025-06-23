@@ -35,10 +35,10 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <graphql-java.version>19.0</graphql-java.version>
-        <eclipse-collections.version>11.0.0</eclipse-collections.version>
-        <jackson.version>2.13.0</jackson.version>
-        <junit.version>5.8.1</junit.version>
+        <graphql-java.version>21.5</graphql-java.version>
+        <eclipse-collections.version>11.1.0</eclipse-collections.version>
+        <jackson.version>2.15.2</jackson.version>
+        <junit.version>5.10.2</junit.version>
     </properties>
 
     <dependencies>
